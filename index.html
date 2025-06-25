@@ -1,0 +1,76 @@
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Gerador de Filmes e Séries</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+    #moviesList { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; }
+    .movie-item { background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 15px; width: 250px; text-align: center; }
+    .movie-item img { width: 100%; height: auto; border-radius: 4px; }
+    button { background: #28a745; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; }
+    button:hover { background: #218838; }
+  </style>
+</head>
+<body>
+  <h1>Gerador de Filmes e Séries para BlogSpot</h1>
+  <div style="text-align: center;">
+    <input type="text" id="search" placeholder="Digite o nome do filme ou série">
+    <input type="number" id="year" placeholder="Ano" min="1900" max="2100">
+    <select id="genre">
+      <option value="">Categoria</option>
+      <option value="28">Ação</option>
+      <option value="35">Comédia</option>
+      <option value="18">Drama</option>
+    </select>
+    <button onclick="searchMovies()">Pesquisar</button>
+  </div>
+  <div id="moviesList"></div>
+  <script>
+    const API_KEY = '075743826c46ae18370fb0cdc997f518';
+    function searchMovies() {
+      const query = document.getElementById('search').value;
+      const year = document.getElementById('year').value;
+      const genre = document.getElementById('genre').value;
+      const url = `https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(query)}&year=${year}&with_genres=${genre}`;
+      fetch(url)
+        .then(res => res.json())
+        .then(data => displayMovies(data.results));
+    }
+    function displayMovies(movies) {
+      const container = document.getElementById('moviesList');
+      container.innerHTML = '';
+      movies.forEach(movie => {
+        const item = document.createElement('div');
+        item.className = 'movie-item';
+        item.innerHTML = `
+          <h3>${movie.title}</h3>
+          <img src="https://image.tmdb.org/t/p/w500/${movie.poster_path}" alt="${movie.title}">
+          <p>${movie.overview}</p>
+          <button onclick="generatePost('${movie.title}', \`${movie.overview.replace(/`/g, "'")}\`, 'https://image.tmdb.org/t/p/w500/${movie.poster_path}')">Gerar Postagem</button>
+        `;
+        container.appendChild(item);
+      });
+    }
+    function generatePost(title, content, image) {
+      const postData = {
+        title: title,
+        content: `<img src="${image}" alt="Capa"><p>${content}</p>`
+      };
+      fetch('/create_post', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(postData)
+      })
+      .then(res => res.json())
+      .then(data => alert('Postagem publicada com sucesso!'))
+      .catch(err => {
+        console.error(err);
+        alert('Erro ao publicar a postagem.');
+      });
+    }
+  </script>
+</body>
+</html>
